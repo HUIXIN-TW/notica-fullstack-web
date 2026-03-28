@@ -2,17 +2,31 @@ import "server-only";
 
 import { NextResponse } from "next/server";
 
+const TRUSTED_ORIGINS = [
+  "http://localhost:3000",
+  "https://notica.studio",
+  "https://www.notica.studio",
+];
+
+function addOrigin(origins, urlLike) {
+  try {
+    origins.add(new URL(urlLike).origin);
+  } catch {}
+}
+
 function getAllowedOrigins(req) {
   const origins = new Set();
 
-  try {
-    origins.add(new URL(req.url).origin);
-  } catch {}
+  // Use an explicit first-party allowlist because Amplify/CloudFront can cause
+  // `req.url` to differ from the browser `Origin`, even for legitimate
+  // same-site traffic.
+  for (const origin of TRUSTED_ORIGINS) {
+    addOrigin(origins, origin);
+  }
+  addOrigin(origins, req.url);
 
   if (process.env.NEXTAUTH_URL) {
-    try {
-      origins.add(new URL(process.env.NEXTAUTH_URL).origin);
-    } catch {}
+    addOrigin(origins, process.env.NEXTAUTH_URL);
   }
 
   return origins;
