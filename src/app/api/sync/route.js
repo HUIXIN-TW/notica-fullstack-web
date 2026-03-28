@@ -83,7 +83,9 @@ export async function POST(req) {
 
   // Only enforce throttle in production environment
 
-  const throttleResult = await enforceDDBThrottle(syncRules(ip, uuid));
+  const throttleResult = await enforceDDBThrottle(
+    syncRules(ip, uuid, token.role),
+  );
   if (throttleResult) {
     return NextResponse.json(
       {

@@ -8,7 +8,7 @@ import NavigateButton from "@components/button/NavigateButton";
 import useSyncHandler from "@hooks/useSyncHandler";
 import { useCountdown } from "@hooks/useCountdown";
 import { useElapsedTime } from "@hooks/useElapsedTime";
-import config from "@config/client/rate-limit";
+import { getSyncUserMinMs } from "@config/client/rate-limit";
 import styles from "./profile.module.css";
 import { isProdRuntime as isProd } from "@utils/shared/logger";
 import { isNotionMobileApp } from "@utils/client/embed-context";
@@ -26,13 +26,14 @@ export default function EmbedSyncPage() {
     }
   }, []);
 
-  const SYNC_USER_MIN_MS = config.SYNC_USER_MIN_MS ?? 10 * 60_000;
-  const { startCountdown, isCountingDown, formattedRemaining } =
-    useCountdown("cooldown:sync");
+  const syncUserMinMs = getSyncUserMinMs(user?.role);
+  const { startCountdown, isCountingDown, formattedRemaining } = useCountdown(
+    user?.role === "admin" ? "cooldown:sync:admin" : "cooldown:sync:user",
+  );
 
   const { syncResult, isSyncing, syncStartedAt, handleSync } = useSyncHandler({
     userUuid: user?.uuid,
-    cooldownMs: SYNC_USER_MIN_MS,
+    cooldownMs: syncUserMinMs,
     startCountdown,
   });
 
@@ -42,8 +43,8 @@ export default function EmbedSyncPage() {
     isSyncing && syncStartedAt
       ? `Syncing... (${elapsedSec}s)`
       : isCountingDown
-        ? `You can sync again in ${formattedRemaining}`
-        : `Sync Calendar`;
+      ? `You can sync again in ${formattedRemaining}`
+      : `Sync Calendar`;
 
   if (isNotionMobile) {
     return (

@@ -57,6 +57,10 @@ export function useCountdown(key) {
 
   // --- Sync across browser tabs/windows
   useEffect(() => {
+    setRemainingSeconds(readRemaining());
+  }, [key]);
+
+  useEffect(() => {
     const onStorage = (e) => {
       if (e.key !== key) return;
       setRemainingSeconds(readRemaining());

@@ -6,7 +6,7 @@ import useSyncHandler from "@hooks/useSyncHandler";
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./profile.module.css";
-import config from "@config/client/rate-limit";
+import { getSyncUserMinMs } from "@config/client/rate-limit";
 import SyncButton from "@components/button/SyncButton";
 import SupportSection from "@components/profile/SupportSection";
 
@@ -15,13 +15,14 @@ const Profile = ({ session }) => {
   const router = useRouter();
 
   // Rate limit configuration
-  const SYNC_USER_MIN_MS = config.SYNC_USER_MIN_MS ?? 10 * 60_000;
-  const { startCountdown, isCountingDown, formattedRemaining } =
-    useCountdown("cooldown:sync");
+  const syncUserMinMs = getSyncUserMinMs(user?.role);
+  const { startCountdown, isCountingDown, formattedRemaining } = useCountdown(
+    user?.role === "admin" ? "cooldown:sync:admin" : "cooldown:sync:user",
+  );
 
   const { syncResult, isSyncing, syncStartedAt, handleSync } = useSyncHandler({
     userUuid: user?.uuid,
-    cooldownMs: SYNC_USER_MIN_MS,
+    cooldownMs: syncUserMinMs,
     startCountdown,
   });
 
@@ -128,8 +129,8 @@ const Profile = ({ session }) => {
           isSyncing && syncStartedAt
             ? `Syncing... (${elapsedSec}s)`
             : isCountingDown
-              ? `You can sync again in ${formattedRemaining}`
-              : `Sync Calendar`
+            ? `You can sync again in ${formattedRemaining}`
+            : `Sync Calendar`
         }
         onSync={handleSync}
         disabled={isSyncing || (isCountingDown && isProd)}

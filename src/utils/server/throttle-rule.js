@@ -1,11 +1,12 @@
 import "server-only";
-import config from "@config/server/rate-limit";
+import config, { getSyncUserThrottleConfig } from "@config/server/rate-limit";
 
 /**
  * Build sync throttling rules: per IP and per user UUID.
  */
-export function syncRules(ip, uuid) {
+export function syncRules(ip, uuid, role) {
   const rules = [];
+  const userSyncConfig = getSyncUserThrottleConfig(role);
 
   if (ip) {
     rules.push({
@@ -25,10 +26,10 @@ export function syncRules(ip, uuid) {
   if (uuid) {
     rules.push({
       key: `sync:user:${uuid}`,
-      minMs: config.SYNC_USER_MIN_MS,
+      minMs: userSyncConfig.minMs,
       window: {
-        limit: config.SYNC_USER_WINDOW_LIMIT,
-        ms: config.SYNC_USER_WINDOW_MS,
+        limit: userSyncConfig.windowLimit,
+        ms: userSyncConfig.windowMs,
       },
       messages: {
         tooFrequent: "Please wait a moment before retrying.",
