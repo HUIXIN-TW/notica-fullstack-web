@@ -13,7 +13,6 @@ export default function AuthErrorPage() {
     OAuthCreateAccount: "Could not create account with Google credentials.",
     OAuthAccountNotLinked: "Email exists with a different sign-in method.",
     EmailCreateAccount: "Error creating account with email.",
-    CredentialsSignin: "Invalid email or password.",
     Callback: "Error during callback handling.",
     Configuration: "Server configuration error. Contact support.",
     AccessDenied: "Access denied. Contact admin.",

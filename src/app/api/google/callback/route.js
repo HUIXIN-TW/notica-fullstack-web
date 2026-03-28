@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@api/auth/[...nextauth]/route";
 import { updateGoogleTokens } from "@models/google-token";
+import { getLiveUserByUuid } from "@utils/server/authz";
 import logger from "@utils/shared/logger";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -48,7 +49,15 @@ export async function GET(req) {
     clearGoogleOAuthCookies(res);
     return res;
   }
-  const allowedEmail = session.user.email.toLowerCase();
+  const liveUser = await getLiveUserByUuid(session.user.uuid);
+  if (!liveUser?.email) {
+    const res = NextResponse.redirect(
+      new URL(`${redirectTarget}?google=error&reason=unauthorized`, BaseUrl),
+    );
+    clearGoogleOAuthCookies(res);
+    return res;
+  }
+  const allowedEmail = liveUser.email.toLowerCase();
 
   // 3) verify state & code_verifier
   const cookieJar = await cookies();
@@ -89,11 +98,14 @@ export async function GET(req) {
       body: tokenBody,
     });
 
+    logger.debug("Google token exchange response received", {
+      status: tokenResp.status,
+    });
+
     if (!tokenResp.ok) {
-      const errorBody = await tokenResp.text();
+      await tokenResp.text();
       logger.error("Google token exchange failed", {
         status: tokenResp.status,
-        body: errorBody,
       });
       const res = NextResponse.redirect(
         new URL(`${redirectTarget}?google=error&reason=token`, BaseUrl),
@@ -111,12 +123,14 @@ export async function GET(req) {
         headers: { Authorization: `Bearer ${tokenPayload.access_token}` },
       },
     );
+    logger.debug("Google userinfo response received", {
+      status: uiResp.status,
+    });
     const profile = await uiResp.json();
 
     if (!uiResp.ok) {
       logger.error("Failed to fetch userinfo", {
         status: uiResp.status,
-        body: profile,
       });
       const res = NextResponse.redirect(
         new URL(`${redirectTarget}?google=error&reason=userinfo`, BaseUrl),
@@ -127,7 +141,7 @@ export async function GET(req) {
 
     const googleEmail = (profile.email || "").toLowerCase();
     if (googleEmail !== allowedEmail) {
-      logger.warn("Email mismatch", { googleEmail, allowedEmail });
+      logger.warn("Email mismatch during Google OAuth callback");
       const res = NextResponse.redirect(
         new URL(
           `${redirectTarget}?google=error&reason=email_mismatch`,
@@ -146,6 +160,7 @@ export async function GET(req) {
       Date.now() + (tokenPayload.expires_in || 0) * 1000,
       Date.now(),
     );
+    logger.debug("Stored Google OAuth tokens for session user");
 
     // 7) success: clean cookies & redirect
     const res = NextResponse.redirect(
@@ -156,7 +171,6 @@ export async function GET(req) {
   } catch (e) {
     logger.error("OAuth callback error", {
       message: e?.message,
-      stack: e?.stack,
     });
     const res = NextResponse.redirect(
       new URL(`${redirectTarget}?google=error&reason=server`, BaseUrl),

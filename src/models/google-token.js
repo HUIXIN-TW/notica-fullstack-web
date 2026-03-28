@@ -1,9 +1,10 @@
 import "server-only";
 import logger from "@utils/shared/logger";
-import { GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { GetCommand, TransactWriteCommand } from "@aws-sdk/lib-dynamodb";
 import { ddb } from "@utils/server/db-client";
 
 const TABLE_NAME = process.env.DYNAMODB_GOOGLE_OAUTH_TOKEN_TABLE;
+const USER_TABLE_NAME = process.env.DYNAMODB_USER_TABLE;
 
 export const updateGoogleTokens = async (
   uuid,
@@ -13,24 +14,40 @@ export const updateGoogleTokens = async (
   updatedAt,
 ) => {
   try {
-    const params = {
-      TableName: TABLE_NAME,
-      Key: { uuid },
-      UpdateExpression: `
-        SET accessToken = :accessToken,
-            refreshToken = :refreshToken,
-            expiryDate = :expiryDate,
-            updatedAt = :now
-      `,
-      ExpressionAttributeValues: {
-        ":accessToken": accessToken,
-        ":refreshToken": refreshToken,
-        ":expiryDate": expiryDate,
-        ":now": updatedAt,
-      },
-    };
-
-    await ddb.send(new UpdateCommand(params));
+    await ddb.send(
+      new TransactWriteCommand({
+        TransactItems: [
+          {
+            ConditionCheck: {
+              TableName: USER_TABLE_NAME,
+              Key: { uuid },
+              ConditionExpression: "attribute_exists(#uuid)",
+              ExpressionAttributeNames: {
+                "#uuid": "uuid",
+              },
+            },
+          },
+          {
+            Update: {
+              TableName: TABLE_NAME,
+              Key: { uuid },
+              UpdateExpression: `
+                SET accessToken = :accessToken,
+                    refreshToken = :refreshToken,
+                    expiryDate = :expiryDate,
+                    updatedAt = :now
+              `,
+              ExpressionAttributeValues: {
+                ":accessToken": accessToken,
+                ":refreshToken": refreshToken,
+                ":expiryDate": expiryDate,
+                ":now": updatedAt,
+              },
+            },
+          },
+        ],
+      }),
+    );
   } catch (error) {
     logger.error("Error updating Google tokens", error);
     throw error;

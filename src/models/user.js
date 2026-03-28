@@ -15,10 +15,6 @@ import notionConfigTemplate from "@templates/notion_config.json";
 
 const TABLE_NAME = process.env.DYNAMODB_USER_TABLE;
 
-// Helper: validate username format
-const isValidUsername = (username) =>
-  /^(?=.{4,20}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$/.test(username);
-
 // Get user by UUID
 export const getUserById = async (id) => {
   try {
@@ -111,9 +107,9 @@ export const getDailyUserCountsLast14 = async () => {
   return Promise.all(jobs);
 };
 
-// Create a user with validation and duplicate email check
+// Create a Google-authenticated user record.
 export const createUser = async (userData) => {
-  const provider = userData.provider || "credentials";
+  const provider = userData.provider || "google";
   const now = new Date();
   const createdAtISO = now.toISOString();
   const createdAtDate = createdAtISO.slice(0, 10); // "YYYY-MM-DD"
@@ -121,29 +117,22 @@ export const createUser = async (userData) => {
   const normalizedEmail = normalizeEmail(userData.email);
 
   if (!normalizedEmail) throw new Error("Email is required!");
-  const username = userData.username || normalizedEmail.split("@")[0];
-
-  // enforce password & username only for credentials provider
-  if (provider === "credentials") {
-    if (!userData.passwordHash) throw new Error("Password is required!");
-    if (!isValidUsername(username)) {
-      throw new Error(
-        "Username invalid, it should contain 4–20 alphanumeric characters and be unique!",
-      );
-    }
+  if (provider !== "google") {
+    throw new Error("Only Google-authenticated users are supported.");
   }
+  if (!userData.providerSub) {
+    throw new Error("Google providerSub is required.");
+  }
+  const username = userData.username || normalizedEmail.split("@")[0];
 
   const item = {
     uuid: uuidv4(),
     email: normalizedEmail,
     username,
-    // include password only for credentials
-    ...(provider === "credentials" && { passwordHash: userData.passwordHash }),
     role: userData.role ?? "user",
     image: userData.image ?? null,
     provider: provider,
-    ...(provider === "google" &&
-      userData.providerSub && { providerSub: userData.providerSub }),
+    providerSub: userData.providerSub,
     createdAt: createdAtDate,
     createdAtMs: createdAtMs,
     updatedAt: createdAtDate,
@@ -151,8 +140,7 @@ export const createUser = async (userData) => {
     lastLoginAt: createdAtDate,
     lastLoginAtMs: createdAtMs,
     lastLoginLocation: userData.lastLoginLocation ?? null,
-    emailVerified:
-      provider === "google" ? true : (userData.emailVerified ?? null),
+    emailVerified: true,
     plan: userData.plan ?? "free",
   };
 
@@ -292,6 +280,10 @@ export async function updateNotionConfigByUuid(uuid, config) {
         Key: { uuid },
         UpdateExpression:
           "SET notionConfig = :cfg, updatedAt = :updatedAtDate, updatedAtMs = :updatedAtMs",
+        ConditionExpression: "attribute_exists(#uuid)",
+        ExpressionAttributeNames: {
+          "#uuid": "uuid",
+        },
         ExpressionAttributeValues: {
           ":cfg": config,
           ":updatedAtDate": updatedAtDate,
@@ -317,6 +309,10 @@ export async function uploadNotionConfigTemplateByUuid(uuid) {
         TableName: TABLE_NAME,
         Key: { uuid },
         UpdateExpression: "SET notionConfig = :cfg, updatedAt = :now",
+        ConditionExpression: "attribute_exists(#uuid)",
+        ExpressionAttributeNames: {
+          "#uuid": "uuid",
+        },
         ExpressionAttributeValues: {
           ":cfg": notionConfig,
           ":now": now,

@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@api/auth/[...nextauth]/route";
 import { getDailyUserCountsLast14 } from "@models/user";
+import { isLiveAdmin } from "@utils/server/authz";
 
 export async function GET() {
   try {
@@ -19,7 +20,7 @@ export async function GET() {
     }
 
     // 3. verify user role
-    if (session.user?.role !== "admin") {
+    if (!(await isLiveAdmin(session.user?.uuid))) {
       return NextResponse.json(
         { error: "Forbidden. Admin access required." },
         { status: 403 },

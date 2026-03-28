@@ -2,20 +2,27 @@ import "server-only";
 
 import logger, { isProdRuntime as isProd } from "@utils/shared/logger";
 import { NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@api/auth/[...nextauth]/route";
 import { validateConfig } from "@utils/server/validate-config";
 import { sendSyncJobMessage } from "@utils/server/sqs-client";
 import { enforceDDBThrottle, extractClientIp } from "@utils/server/throttle";
 import { syncRules } from "@utils/server/throttle-rule";
+import { enforceTrustedOrigin } from "@utils/server/csrf";
+import { getLiveUserByUuid } from "@utils/server/authz";
 
 // Use centralized prod detection (AWS_BRANCH or APP_ENV) to avoid env typos
 
 export async function POST(req) {
+  const csrfResponse = enforceTrustedOrigin(req);
+  if (csrfResponse) return csrfResponse;
+
   // AuthN
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const session = await getServerSession(authOptions);
+  const sessionUser = session?.user;
 
   // must be logged in
-  if (!token) {
+  if (!sessionUser?.uuid) {
     return NextResponse.json(
       { type: "auth error", message: "Unauthorized", needRefresh: false },
       { status: 401 },
@@ -23,10 +30,11 @@ export async function POST(req) {
   }
 
   // only allow sub google oauth (not allow email login)
-  const isGoogleOAuth = token?.provider === "google" && !!token?.providerSub;
+  const isGoogleOAuth =
+    sessionUser?.provider === "google" && !!sessionUser?.providerSub;
   logger.info("Sync request by", {
-    uuid: token.uuid,
-    provider: token.provider,
+    uuid: sessionUser.uuid,
+    provider: sessionUser.provider,
     isGoogleOAuth: isGoogleOAuth,
   });
   if (!isGoogleOAuth) {
@@ -36,6 +44,14 @@ export async function POST(req) {
         message: "Only Google OAuth login is allowed to sync",
         needRefresh: false,
       },
+      { status: 401 },
+    );
+  }
+
+  const liveUser = await getLiveUserByUuid(sessionUser.uuid);
+  if (!liveUser) {
+    return NextResponse.json(
+      { type: "auth error", message: "Unauthorized", needRefresh: false },
       { status: 401 },
     );
   }
@@ -61,8 +77,8 @@ export async function POST(req) {
   }
 
   // AuthZ：uuid must be the same as token
-  if (uuid !== token.uuid) {
-    logger.warn(`UUID mismatch received=${uuid} expected=${token.uuid}`);
+  if (uuid !== sessionUser.uuid) {
+    logger.warn(`UUID mismatch received=${uuid} expected=${sessionUser.uuid}`);
     return NextResponse.json(
       { type: "auth error", message: "UUID mismatch", needRefresh: false },
       { status: 403 },
@@ -84,7 +100,7 @@ export async function POST(req) {
   // Only enforce throttle in production environment
 
   const throttleResult = await enforceDDBThrottle(
-    syncRules(ip, uuid, token.role),
+    syncRules(ip, uuid, liveUser.role),
   );
   if (throttleResult) {
     return NextResponse.json(

@@ -3,12 +3,20 @@ import { NextResponse } from "next/server";
 import { authOptions } from "@api/auth/[...nextauth]/route";
 import { getGoogleOAuthClient } from "@utils/server/google-oauth-client";
 import { getGoogleTokensByUuid } from "@models/google-token";
+import { getLiveUserByUuid } from "@utils/server/authz";
 import logger from "@utils/shared/logger";
 
 export async function GET(req) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.uuid) {
+    return NextResponse.json(
+      { error: "User not authenticated" },
+      { status: 401 },
+    );
+  }
+
+  if (!(await getLiveUserByUuid(session.user.uuid))) {
     return NextResponse.json(
       { error: "User not authenticated" },
       { status: 401 },
@@ -55,8 +63,10 @@ export async function GET(req) {
       name: c.summary,
       accessRole: c.accessRole,
     }));
+    logger.debug("Fetched writable Google calendars", {
+      count: calendars.length,
+    });
 
-    console.log("Fetched calendars:", calendars);
     return NextResponse.json({ calendars });
   } catch (error) {
     logger.error("Error fetching Google Calendars:", error);

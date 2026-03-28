@@ -2,29 +2,23 @@ import "server-only";
 
 import logger from "@utils/shared/logger";
 import { getAllUsers } from "@models/user";
-import { getToken } from "next-auth/jwt";
-
-const sanitize = (u) => {
-  if (!u) return u;
-  const { password, ...rest } = u;
-  return rest;
-};
+import { getServerSession } from "next-auth";
+import { authOptions } from "@api/auth/[...nextauth]/route";
+import { isLiveAdmin } from "@utils/server/authz";
+import { sanitizeUsersForResponse } from "@utils/server/sanitize-user";
 
 export const GET = async (request) => {
   try {
     // AuthN: require a valid session token
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
-    if (!token) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.uuid) {
       return new Response(JSON.stringify({ message: "Unauthorized" }), {
         status: 401,
       });
     }
 
     // AuthZ: only admin can list all users
-    if (token.role !== "admin") {
+    if (!(await isLiveAdmin(session.user.uuid))) {
       return new Response(JSON.stringify({ message: "Forbidden" }), {
         status: 403,
       });
@@ -32,7 +26,7 @@ export const GET = async (request) => {
 
     // Fetch all users using the DynamoDB model
     const users = await getAllUsers();
-    const safeUsers = users.map(sanitize);
+    const safeUsers = sanitizeUsersForResponse(users);
 
     return new Response(JSON.stringify(safeUsers), { status: 200 });
   } catch (error) {

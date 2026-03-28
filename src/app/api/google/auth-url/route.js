@@ -3,6 +3,7 @@ import "server-only";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@api/auth/[...nextauth]/route";
+import { getLiveUserByUuid } from "@utils/server/authz";
 import logger from "@utils/shared/logger";
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -18,6 +19,8 @@ export async function GET(req) {
   const session = await getServerSession(authOptions);
   const uuid = session?.user?.uuid;
   if (!uuid)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!(await getLiveUserByUuid(uuid)))
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const nonce = crypto.randomUUID();
@@ -41,7 +44,7 @@ export async function GET(req) {
       { status: 500 },
     );
   const redirectUri = `${baseUrl}/api/google/callback`;
-  logger.debug("Redirect URI for Google OAuth:", redirectUri);
+  logger.debug("Prepared Google OAuth redirect URI", { redirectUri });
 
   const u = new URL("https://accounts.google.com/o/oauth2/v2/auth");
   u.searchParams.set("client_id", CLIENT_ID);
@@ -54,8 +57,11 @@ export async function GET(req) {
   u.searchParams.set("prompt", "consent");
   u.searchParams.set("code_challenge", codeChallenge);
   u.searchParams.set("code_challenge_method", "S256");
-  logger.debug("Google OAuth URL:", u.toString());
-  logger.sensitive("State:", state, "Code Verifier:", codeVerifier);
+  logger.debug("Prepared Google OAuth request", {
+    scopeCount: SCOPES.length,
+    accessType: "offline",
+    includeGrantedScopes: true,
+  });
 
   const res = NextResponse.json({ url: u.toString() });
   res.cookies.set("google_oauth_state", state, {

@@ -2,22 +2,16 @@ import "server-only";
 
 import logger from "@utils/shared/logger";
 import { getUserById } from "@models/user";
-import { getToken } from "next-auth/jwt";
-
-const sanitize = (u) => {
-  if (!u) return u;
-  const { password, ...rest } = u;
-  return rest;
-};
+import { getServerSession } from "next-auth";
+import { authOptions } from "@api/auth/[...nextauth]/route";
+import { isLiveAdmin } from "@utils/server/authz";
+import { sanitizeUserForResponse } from "@utils/server/sanitize-user";
 
 export const GET = async (request, { params }) => {
   try {
     // AuthN
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
-    if (!token) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.uuid) {
       return new Response(JSON.stringify({ message: "Unauthorized" }), {
         status: 401,
       });
@@ -35,13 +29,16 @@ export const GET = async (request, { params }) => {
     }
 
     // AuthZ: only the same user (owner) or admin can read
-    if (token.role !== "admin" && token.uuid !== user.uuid) {
+    const canReadAnyUser = await isLiveAdmin(session.user.uuid);
+    if (!canReadAnyUser && session.user.uuid !== user.uuid) {
       return new Response(JSON.stringify({ message: "Forbidden" }), {
         status: 403,
       });
     }
 
-    return new Response(JSON.stringify(sanitize(user)), { status: 200 });
+    return new Response(JSON.stringify(sanitizeUserForResponse(user)), {
+      status: 200,
+    });
   } catch (error) {
     logger.error("Error fetching user", error);
     return new Response("Failed to fetch the user", { status: 500 });

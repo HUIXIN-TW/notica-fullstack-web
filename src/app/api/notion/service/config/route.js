@@ -2,14 +2,28 @@ import "server-only";
 
 import logger from "@utils/shared/logger";
 import { NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getServerSession } from "next-auth";
 import { getNotionConfigByUuid, updateNotionConfigByUuid } from "@models/user";
+import { authOptions } from "@api/auth/[...nextauth]/route";
+import { getLiveUserByUuid } from "@utils/server/authz";
+import { enforceTrustedOrigin } from "@utils/server/csrf";
 
 export async function GET(req) {
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-  const uuid = token?.uuid;
+  const session = await getServerSession(authOptions);
+  const uuid = session?.user?.uuid;
 
   if (!uuid) {
+    return new Response(
+      JSON.stringify({
+        type: "unauthorized",
+        message: "Unauthorized",
+      }),
+      { status: 401 },
+    );
+  }
+
+  const liveUser = await getLiveUserByUuid(uuid);
+  if (!liveUser) {
     return new Response(
       JSON.stringify({
         type: "unauthorized",
@@ -32,10 +46,24 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-  const uuid = token?.uuid;
+  const csrfResponse = enforceTrustedOrigin(req);
+  if (csrfResponse) return csrfResponse;
+
+  const session = await getServerSession(authOptions);
+  const uuid = session?.user?.uuid;
 
   if (!uuid) {
+    return new Response(
+      JSON.stringify({
+        type: "unauthorized",
+        message: "Unauthorized",
+      }),
+      { status: 401 },
+    );
+  }
+
+  const liveUser = await getLiveUserByUuid(uuid);
+  if (!liveUser) {
     return new Response(
       JSON.stringify({
         type: "unauthorized",
@@ -92,6 +120,15 @@ export async function POST(req) {
       { status: 200 },
     );
   } catch (err) {
+    if (err?.name === "ConditionalCheckFailedException") {
+      return new Response(
+        JSON.stringify({
+          type: "unauthorized",
+          message: "Unauthorized",
+        }),
+        { status: 401 },
+      );
+    }
     logger.error("Failed to update config", err);
     return new Response(
       JSON.stringify({

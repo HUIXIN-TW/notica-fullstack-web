@@ -4,6 +4,7 @@ import { isProdRuntime as isProd } from "@utils/shared/logger";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@api/auth/[...nextauth]/route";
+import { getLiveUserByUuid } from "@utils/server/authz";
 
 const CLIENT_ID = process.env.NOTION_CLIENT_ID;
 const BASEURL = process.env.NEXTAUTH_URL;
@@ -11,6 +12,9 @@ const BASEURL = process.env.NEXTAUTH_URL;
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.uuid) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (!(await getLiveUserByUuid(session.user.uuid))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

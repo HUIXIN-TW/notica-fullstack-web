@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@api/auth/[...nextauth]/route";
 import { updateNotionTokens } from "@models/notion-token";
+import { getLiveUserByUuid } from "@utils/server/authz";
 import logger from "@utils/shared/logger";
 
 function clearNotionOAuthCookies(res) {
@@ -42,16 +43,20 @@ export async function GET(req) {
     clearNotionOAuthCookies(res);
     return res;
   }
+  if (!(await getLiveUserByUuid(session.user.uuid))) {
+    const res = NextResponse.redirect(
+      new URL(`${redirectTarget}?notion=error&reason=unauthorized`, BaseUrl),
+    );
+    clearNotionOAuthCookies(res);
+    return res;
+  }
 
   // 3) verify state
   const cookieJar = await cookies();
   const expectedState = cookieJar.get("notion_oauth_state")?.value ?? "";
 
   if (!returnedState || returnedState !== expectedState) {
-    logger.error("Notion OAuth state mismatch", {
-      returnedState,
-      expectedState,
-    });
+    logger.error("Notion OAuth state mismatch");
     const res = NextResponse.redirect(
       new URL(`${redirectTarget}?notion=error&reason=state`, BaseUrl),
     );
@@ -62,10 +67,7 @@ export async function GET(req) {
   // 4) check user uuid
   const [userUuid] = returnedState.split(":");
   if (!userUuid || userUuid !== session.user.uuid) {
-    logger.error("Missing or mismatched user uuid in state", {
-      userUuid,
-      sessionUuid: session.user.uuid,
-    });
+    logger.error("Missing or mismatched user uuid in Notion OAuth state");
     const res = NextResponse.redirect(
       new URL(`${redirectTarget}?notion=error&reason=uuid`, BaseUrl),
     );
@@ -91,13 +93,15 @@ export async function GET(req) {
         redirect_uri: `${BaseUrl}/api/notion/callback`,
       }),
     });
+    logger.debug("Notion token exchange response received", {
+      status: tokenRes.status,
+    });
 
     const tokenJson = await tokenRes.json();
 
     if (!tokenRes.ok) {
       logger.error("Notion token exchange failed", {
         status: tokenRes.status,
-        body: tokenJson,
       });
       const res = NextResponse.redirect(
         new URL(`${redirectTarget}?notion=error&reason=token`, BaseUrl),
@@ -113,6 +117,7 @@ export async function GET(req) {
       tokenJson.duplicated_template_id,
       Date.now(),
     );
+    logger.debug("Stored Notion OAuth tokens for session user");
 
     // 6) success: clean cookies & redirect
     const res = NextResponse.redirect(
@@ -128,7 +133,6 @@ export async function GET(req) {
   } catch (e) {
     logger.error("Notion OAuth callback error", {
       message: e?.message,
-      stack: e?.stack,
     });
     const res = NextResponse.redirect(
       new URL(`${redirectTarget}?notion=error&reason=server`, BaseUrl),
