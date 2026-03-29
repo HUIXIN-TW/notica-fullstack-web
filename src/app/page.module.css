@@ -1,15 +1,373 @@
 .home {
-  padding: 20px;
-  font-size: 2.5rem;
-  font-weight: 600;
-  border-radius: 30px;
-  text-align: center;
+  width: min(1240px, calc(100vw - 40px));
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 28px 0 48px;
 }
 
-.detail {
-  font-size: 14px;
-  color: #343a40;
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.85fr);
+  gap: 20px;
+  align-items: stretch;
+}
+
+.heroCopy,
+.heroPanel,
+.heroChecklist,
+.stepCard,
+.infoCard {
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 24px;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(12px);
+}
+
+.heroCopy {
+  display: flex;
+  flex-direction: column;
+  padding: 36px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.12);
+  color: #1d4ed8;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.heroCopy h1 {
+  margin: 16px 0 14px;
+  max-width: 10.5ch;
+  font-size: clamp(1.95rem, 4.2vw, 3.5rem);
+  line-height: 0.96;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+  color: #0f172a;
+}
+
+.lead {
+  margin: 0;
+  max-width: 58ch;
+  color: #334155;
+  font-size: 0.98rem;
+  line-height: 1.72;
+}
+
+.ctaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.primaryCta {
+  display: flex;
+}
+
+.secondaryCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  color: #0f172a;
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition:
+    transform 150ms ease,
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+.secondaryCta:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(15, 23, 42, 0.25);
+}
+
+.inlineMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 24px;
+}
+
+.inlineMeta span {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.05);
+  color: #334155;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.heroPanel {
+  padding: 30px 28px;
+}
+
+.heroRail {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+}
+
+.heroRail > * {
+  flex: 1 1 0;
+}
+
+.heroChecklist {
+  padding: 24px 28px;
+}
+
+.heroPanel h2,
+.heroChecklist h2,
+.sectionHeader h2,
+.stepCard h3,
+.infoCard h3 {
+  margin: 0;
+  color: #0f172a;
+}
+
+.heroPanel h2 {
+  font-size: 1.2rem;
+  margin-bottom: 18px;
+}
+
+.heroChecklist h2 {
+  font-size: 1.05rem;
+  margin-bottom: 16px;
+}
+
+.featureList,
+.checkList,
+.setupList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.featureList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.featureList li,
+.checkList li,
+.setupList li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.featureList li svg,
+.checkList li svg,
+.setupList li svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #2563eb;
+}
+
+.featureList strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.98rem;
+}
+
+.featureList span,
+.infoCard p,
+.stepCard p,
+.setupList span,
+.sectionHeader p,
+.linkList a {
+  color: #475569;
+}
+
+.featureList span,
+.infoCard p,
+.stepCard p,
+.setupList span,
+.sectionHeader p {
+  line-height: 1.7;
+}
+
+.setupList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.setupList strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.94rem;
+  color: #0f172a;
+}
+
+.setupList span {
+  font-size: 0.94rem;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sectionHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 4px;
+}
+
+.sectionHeader h2 {
+  font-size: 1.55rem;
+}
+
+.sectionHeader p {
+  margin: 0;
+  font-size: 0.98rem;
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.stepCard,
+.infoCard {
+  padding: 24px;
+}
+
+.stepNumber {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #111827, #334155);
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.stepCard h3,
+.infoCard h3 {
+  margin-top: 16px;
+  font-size: 1.05rem;
+}
+
+.stepCard p,
+.infoCard p {
+  margin: 12px 0 0;
   line-height: 1.6;
-  text-align: left;
-  padding: 20px;
+  font-size: 0.96rem;
+}
+
+.checkList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.checkList span {
+  line-height: 1.5;
+}
+
+.linkList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.linkList a {
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.linkList a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 960px) {
+  .hero,
+  .cardGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .heroRail {
+    height: auto;
+  }
+
+  .heroRail > * {
+    flex: 0 0 auto;
+  }
+
+  .heroCopy h1 {
+    max-width: 12ch;
+    font-size: clamp(2rem, 6.3vw, 3.1rem);
+  }
+}
+
+@media (max-width: 640px) {
+  .home {
+    width: min(100vw - 24px, 1240px);
+    gap: 20px;
+    padding: 12px 0 28px;
+  }
+
+  .heroCopy,
+  .heroPanel,
+  .heroChecklist,
+  .stepCard,
+  .infoCard {
+    border-radius: 20px;
+  }
+
+  .heroCopy,
+  .heroPanel,
+  .heroChecklist,
+  .stepCard,
+  .infoCard {
+    padding: 20px;
+  }
+
+  .heroCopy h1 {
+    max-width: none;
+    font-size: clamp(1.9rem, 8.8vw, 2.7rem);
+    line-height: 1;
+  }
+
+  .ctaRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .primaryCta {
+    width: 100%;
+  }
+
+  .sectionHeader h2 {
+    font-size: 1.3rem;
+  }
 }

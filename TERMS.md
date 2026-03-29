@@ -33,7 +33,7 @@ We may suspend or terminate accounts that abuse the system or pose a security ri
 
 ## 6. Liability
 
-To the maximum extent permitted by law, WhatNow Studio shall not be liable for any indirect, incidental, or consequential damages arising from your use of the Service.
+To the maximum extent permitted by law, Notica Studio shall not be liable for any indirect, incidental, or consequential damages arising from your use of the Service.
 
 ## 7. Governing Law
 

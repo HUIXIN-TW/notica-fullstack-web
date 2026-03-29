@@ -4,7 +4,7 @@ Last updated: 2025-10-13
 
 ## 1. Overview
 
-NOTICA (“the Service”, operated by WhatNow Studio) connects your Google Calendar and Notion workspace to synchronize events securely and privately.
+NOTICA (“the Service”, operated by Notica Studio) connects your Google Calendar and Notion workspace to synchronize events securely and privately.
 
 We collect and process only the minimum information necessary to perform synchronization between your accounts.
 
