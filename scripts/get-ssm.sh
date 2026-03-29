@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
 # Fetch AWS SSM parameters under a path, with pagination, and optionally write a dotenv file or export to shell
 # Usage:
-#   ./scripts/get-ssm.sh <ssm_path> [--region us-east-1] [--out .env.local] [--export]
+#   ./scripts/get-ssm.sh <ssm_path> [--region ap-southeast-2] [--out .env.local] [--export]
 
 set -euo pipefail
 
 SSM_PATH="${1:-}"
 shift || true
 
-REGION="us-east-1"
+REGION="ap-southeast-2"
 OUT_FILE=""
 DO_EXPORT=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --region)
-      REGION="${2:-us-east-1}"; shift 2 ;;
+      REGION="${2:-ap-southeast-2}"; shift 2 ;;
     --out)
       OUT_FILE="${2:-}"; shift 2 ;;
     --export)
@@ -26,7 +26,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$SSM_PATH" ]]; then
-  echo "Usage: $0 <SSM_PARAMETER_PATH> [--region us-east-1] [--out .env.local] [--export]" >&2
+  echo "Usage: $0 <SSM_PARAMETER_PATH> [--region ap-southeast-2] [--out .env.local] [--export]" >&2
   exit 1
 fi
 

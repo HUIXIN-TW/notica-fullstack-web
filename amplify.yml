@@ -6,7 +6,7 @@ frontend:
         - set -euo pipefail
         # store SSM parameters to .env
         - >
-          aws ssm get-parameters-by-path --region us-east-1 --path "/notion-sync-gcal/production/" --recursive --with-decryption
+          aws ssm get-parameters-by-path --region ap-southeast-2 --path "/dev/legacy/notica-fullstack/production/" --recursive --with-decryption
           --query 'Parameters[].{K:Name,V:Value}' --output text
           | awk -F'\t' '{k=$1; gsub(".*/","",k); printf("%s=%s\n", toupper(k), $2)}' > .env
 
