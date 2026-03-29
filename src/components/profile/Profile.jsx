@@ -129,8 +129,8 @@ const Profile = ({ session }) => {
           isSyncing && syncStartedAt
             ? `Syncing... (${elapsedSec}s)`
             : isCountingDown
-            ? `You can sync again in ${formattedRemaining}`
-            : `Sync Calendar`
+              ? `You can sync again in ${formattedRemaining}`
+              : `Sync Calendar`
         }
         onSync={handleSync}
         disabled={isSyncing || (isCountingDown && isProd)}

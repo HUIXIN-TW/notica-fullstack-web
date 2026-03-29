@@ -43,8 +43,8 @@ export default function EmbedSyncPage() {
     isSyncing && syncStartedAt
       ? `Syncing... (${elapsedSec}s)`
       : isCountingDown
-      ? `You can sync again in ${formattedRemaining}`
-      : `Sync Calendar`;
+        ? `You can sync again in ${formattedRemaining}`
+        : `Sync Calendar`;
 
   if (isNotionMobile) {
     return (

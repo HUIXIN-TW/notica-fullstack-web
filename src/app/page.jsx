@@ -34,7 +34,9 @@ export default function Home() {
       <section className={styles.hero}>
         <div className={styles.heroCopy}>
           <div className={styles.eyebrow}>Notica Studio</div>
-          <h1>Keep Google Calendar and Notion in sync without manual copying.</h1>
+          <h1>
+            Keep Google Calendar and Notion in sync without manual copying.
+          </h1>
           <p className={styles.lead}>
             Connect Google Calendar, connect Notion, choose the calendars and
             database you care about, and run sync with clear setup and status.
@@ -81,8 +83,8 @@ export default function Home() {
                 <div>
                   <strong>Write into your Notion database</strong>
                   <span>
-                    Use a Notion database as the destination for calendar
-                    events and keep the structure easy to review.
+                    Use a Notion database as the destination for calendar events
+                    and keep the structure easy to review.
                   </span>
                 </div>
               </li>
@@ -174,7 +176,10 @@ export default function Home() {
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
           <h2>Before you continue</h2>
-          <p>These are the core things the product touches and where to review them.</p>
+          <p>
+            These are the core things the product touches and where to review
+            them.
+          </p>
         </div>
         <div className={styles.cardGrid}>
           <article className={styles.infoCard}>
