@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-const API_ENDPOINT =
-  "https://pu4jh5g2fqmimsh6uykanud6iu0cjrdu.lambda-url.us-east-1.on.aws/";
+const API_ENDPOINT = "/api/admin/migration";
 
 const MigrationDashboard = ({ refreshKey = null }) => {
   const [data, setData] = useState(null);
