@@ -1,0 +1,238 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.subtitle {
+  margin: 4px 0 0;
+  font-size: 0.88rem;
+  color: #6b7280;
+  line-height: 1.45;
+}
+
+.sourceLink {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.sourceLink:hover {
+  text-decoration: underline;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+}
+
+.summaryCard {
+  border: 1px solid #eef2f7;
+  background: rgba(249, 250, 251, 0.75);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.summaryLabel {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+}
+
+.summaryValue {
+  margin: 4px 0 0;
+  font-size: 1.28rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.2;
+}
+
+.block {
+  margin-top: 0;
+}
+
+.block + .block {
+  margin-top: 18px;
+}
+
+.blockHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  padding: 4px 0 8px;
+}
+
+.blockTitle {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.blockMeta {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #6b7280;
+}
+
+.monthList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.monthItem {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+}
+
+.monthItem + .monthItem {
+  margin-top: 2px;
+}
+
+.monthName {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #374151;
+  font-weight: 600;
+}
+
+.monthValue {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #2563eb;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.pdfList {
+  list-style: decimal;
+  margin: 0;
+  padding: 0 0 0 24px;
+}
+
+.pdfItem {
+  padding: 10px 0;
+}
+
+.pdfItem + .pdfItem {
+  margin-top: 2px;
+}
+
+.pdfAnchor {
+  color: #1d4ed8;
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.pdfAnchor:hover {
+  text-decoration: underline;
+}
+
+.pdfMeta {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: #6b7280;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.empty {
+  padding: 10px 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.state {
+  padding: 18px;
+  font-size: 0.95rem;
+  color: #374151;
+}
+
+.stateError {
+  padding: 18px;
+  font-size: 0.95rem;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  color: #b91c1c;
+  background: #fef2f2;
+}
+
+@media (max-width: 640px) {
+  .title {
+    font-size: 1.18rem;
+  }
+
+  .summaryValue {
+    font-size: 1.12rem;
+  }
+
+  .monthItem,
+  .pdfItem,
+  .blockHeader {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    gap: 8px;
+  }
+
+  .title {
+    font-size: 1.08rem;
+  }
+
+  .subtitle {
+    font-size: 0.82rem;
+  }
+
+  .sourceLink {
+    font-size: 0.82rem;
+  }
+
+  .summaryGrid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .summaryCard {
+    padding: 10px 12px;
+  }
+
+  .summaryValue {
+    font-size: 1.05rem;
+  }
+
+  .blockHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+}

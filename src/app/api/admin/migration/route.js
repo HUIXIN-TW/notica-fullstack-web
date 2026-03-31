@@ -11,8 +11,7 @@ import { isLiveAdmin } from "@utils/server/authz";
 
 export const dynamic = "force-dynamic";
 
-const MIGRATION_FUNCTION_URL =
-  "https://oa7jv7b6e2asxbu4omu333st6i0oqckz.lambda-url.ap-southeast-2.on.aws/";
+const MIGRATION_FUNCTION_URL = process.env.WEB_DETECTIVE_MIGRATION_FUNCTION_URL;
 
 function parseLambdaUrlRegion(url) {
   const match = url.hostname.match(/\.lambda-url\.([a-z0-9-]+)\.on\.aws$/);
@@ -34,10 +33,57 @@ function normalizeQuery(searchParams) {
   return query;
 }
 
-async function invokeMigrationLambda(functionUrl) {
-  const url = new URL(functionUrl);
-  const region = parseLambdaUrlRegion(url) || process.env.AWS_REGION;
+function toNumber(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number(value.replace(/,/g, ""));
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return 0;
+}
 
+function normalizeMonthValues(payload) {
+  const normalized = {};
+  Object.entries(payload || {}).forEach(([key, value]) => {
+    normalized[key] = toNumber(value);
+  });
+  return normalized;
+}
+
+function normalizeMigrationPayload(payload) {
+  if (!payload || typeof payload !== "object") {
+    throw new Error("Invalid migration payload: expected object");
+  }
+
+  if (!payload.months || typeof payload.months !== "object") {
+    throw new Error("Invalid migration payload: missing months");
+  }
+
+  if (!Array.isArray(payload.pdfLinks)) {
+    throw new Error("Invalid migration payload: missing pdfLinks");
+  }
+
+  return {
+    months: normalizeMonthValues(payload.months),
+    pdfLinks: payload.pdfLinks,
+    pdfCount:
+      typeof payload.pdfCount === "number" && Number.isFinite(payload.pdfCount)
+        ? payload.pdfCount
+        : payload.pdfLinks.length,
+    pdfSourceUrl:
+      typeof payload.pdfSourceUrl === "string" && payload.pdfSourceUrl
+        ? payload.pdfSourceUrl
+        : null,
+  };
+}
+
+async function invokeMigrationLambda(functionUrl, mode = null) {
+  const url = new URL(functionUrl);
+  if (mode) {
+    url.searchParams.set("mode", mode);
+  }
+
+  const region = parseLambdaUrlRegion(url) || process.env.AWS_REGION;
   if (!region) {
     throw new Error(
       "Cannot resolve AWS region for WEB_DETECTIVE_MIGRATION_FUNCTION_URL.",
@@ -64,13 +110,11 @@ async function invokeMigrationLambda(functionUrl) {
     }),
   );
 
-  const response = await fetch(url.toString(), {
+  return fetch(url.toString(), {
     method: "GET",
     headers: signed.headers,
     cache: "no-store",
   });
-
-  return response;
 }
 
 export async function GET() {
@@ -88,24 +132,39 @@ export async function GET() {
       );
     }
 
-    const upstream = await invokeMigrationLambda(MIGRATION_FUNCTION_URL);
+    const upstream = await invokeMigrationLambda(MIGRATION_FUNCTION_URL, "all");
     if (!upstream.ok) {
       const detail = await upstream.text();
+      const responseStatus =
+        upstream.status === 401 || upstream.status === 403
+          ? upstream.status
+          : 502;
       return NextResponse.json(
         {
           error: "Migration lambda request failed",
-          statusCode: upstream.status,
+          mode: "all",
+          upstreamStatus: upstream.status,
           detail,
         },
-        { status: 502 },
+        { status: responseStatus },
       );
     }
 
     const payload = await upstream.json();
-    return NextResponse.json(payload, {
-      status: 200,
-      headers: { "Cache-Control": "no-store" },
-    });
+    const normalized = normalizeMigrationPayload(payload);
+
+    return NextResponse.json(
+      {
+        months: normalized.months,
+        pdfLinks: normalized.pdfLinks,
+        pdfCount: normalized.pdfCount,
+        pdfSourceUrl: normalized.pdfSourceUrl,
+      },
+      {
+        status: 200,
+        headers: { "Cache-Control": "no-store" },
+      },
+    );
   } catch (err) {
     return NextResponse.json(
       { error: "Internal Server Error", detail: err?.message || String(err) },
