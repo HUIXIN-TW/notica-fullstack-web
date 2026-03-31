@@ -4,7 +4,7 @@
 
 ### Step 1 Start from the Getting Started Page
 
-- Visit **[https://www.notica.studio/getting-started](https://www.notica.studio/getting-started)**.
+- Visit **[https://notica.studio/getting-started](https://notica.studio/getting-started)**.
 - **Connect Google** → choose your calendar.
 - **Connect Notion** → authorize your workspace.
   - When prompted, click **Use the template provided by the developer** to copy the database into your workspace.
