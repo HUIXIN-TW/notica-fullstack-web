@@ -2,6 +2,7 @@ import "server-only";
 import logger from "@utils/shared/logger";
 import { GetCommand, TransactWriteCommand } from "@aws-sdk/lib-dynamodb";
 import { ddb } from "@utils/server/db-client";
+import { encryptToken, decryptToken } from "@utils/server/token-crypto";
 
 const TABLE_NAME = process.env.DYNAMODB_NOTION_OAUTH_TOKEN_TABLE;
 const USER_TABLE_NAME = process.env.DYNAMODB_USER_TABLE;
@@ -34,7 +35,7 @@ export const updateNotionTokens = async (
               UpdateExpression:
                 "SET accessToken = :accessToken, workspaceId = :workspaceId, duplicatedTemplateId = :duplicatedTemplateId, updatedAt = :updatedAt",
               ExpressionAttributeValues: {
-                ":accessToken": accessToken,
+                ":accessToken": encryptToken(accessToken),
                 ":workspaceId": workspaceId,
                 ":duplicatedTemplateId": duplicatedTemplateId,
                 ":updatedAt": updatedAt,
@@ -59,7 +60,11 @@ export const getNotionTokensByUuid = async (uuid) => {
         Key: { uuid },
       }),
     );
-    return result.Item;
+    const item = result.Item;
+    if (item?.accessToken) {
+      item.accessToken = decryptToken(item.accessToken);
+    }
+    return item;
   } catch (error) {
     logger.error("Error getting Notion tokens by UUID", error);
     throw error;
