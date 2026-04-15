@@ -76,12 +76,6 @@
   background: linear-gradient(180deg, #fafcff 0%, #ffffff 100%);
 }
 
-.chartWrapMigration {
-  position: relative;
-  width: 100%;
-  height: auto;
-}
-
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));

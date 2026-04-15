@@ -41,8 +41,6 @@ const nextConfig = {
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
     NOTION_CLIENT_ID: process.env.NOTION_CLIENT_ID,
-    WEB_DETECTIVE_MIGRATION_FUNCTION_URL:
-      process.env.WEB_DETECTIVE_MIGRATION_FUNCTION_URL,
     APP_ENV: process.env.APP_ENV || "production",
     NEXT_PUBLIC_BUILD_VERSION:
       process.env.NEXT_PUBLIC_BUILD_VERSION || new Date().toISOString(),

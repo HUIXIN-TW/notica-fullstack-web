@@ -16,7 +16,6 @@ import {
 import Button from "@components/button/Button";
 import formatTimestamp from "@utils/client/format-timestamp";
 import formatSyncLog from "@utils/client/format-sync-log";
-import MigrationDashboard from "./migration/migration.jsx";
 import styles from "./admin.module.css";
 
 ChartJS.register(
@@ -92,7 +91,6 @@ export default function Admin() {
   const [syncDailyCounts, setSyncDailyCounts] = useState(null);
   const [latestSyncLogs, setLatestSyncLogs] = useState([]);
   const [users, setUsers] = useState([]);
-  const [migrationRefreshKey, setMigrationRefreshKey] = useState(null);
   const [expandedLogs, setExpandedLogs] = useState(new Set());
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -271,7 +269,6 @@ export default function Admin() {
   };
 
   const refreshAll = () => {
-    setMigrationRefreshKey((k) => (k ?? 0) + 1);
     fetchDashboardData();
   };
 
@@ -299,11 +296,6 @@ export default function Admin() {
       )}
 
       <div className={styles.grid}>
-        <section className={`${styles.section} ${styles.card}`}>
-          <div className={styles.chartWrapMigration}>
-            <MigrationDashboard refreshKey={migrationRefreshKey} />
-          </div>
-        </section>
         <section className={`${styles.section} ${styles.card}`}>
           <div className={styles.sectionHeading}>
             <h2>Notica Fullstack DynamoDB Statistics</h2>
