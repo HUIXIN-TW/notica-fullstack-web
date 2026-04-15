@@ -2,7 +2,7 @@ import "server-only";
 
 import { NextResponse } from "next/server";
 
-const TRUSTED_ORIGINS = ["http://localhost:3000", "https://notica.studio"];
+const TRUSTED_ORIGINS = ["http://localhost:3000", "https://legacy.notica.studio"];
 
 function addOrigin(origins, urlLike) {
   try {
